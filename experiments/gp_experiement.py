@@ -14,26 +14,25 @@ import tensorflow as tf
 params = NeuralProcessParams(dim_r=2, dim_z=2, n_hidden_units_h=[8], n_hidden_units_g=[32, 32, 32])
 
 # init sampling settings
-n_iter = 10000
+n_iter = 100000
 print_freq = n_iter/10
 n_obs = 20
 
 # Init data generator
-from src.data_generators.sine_dg import SineDataGen
+from src.data_generators.gp_dg import GPDataGen
+
 def param_sampler():
-    amp = random.uniform(-2, 2)
-    phase = random.uniform(0, np.pi / 2)
-    return {'amp': amp, 'phase': phase}
+    return None
 
 def xs_sampler():
     xs = np.random.uniform(-3, 3, n_obs)
     return xs
 
 param = param_sampler()
-data_generator = SineDataGen(param_sampler= param_sampler, xs_sampler=xs_sampler)
+data_generator = GPDataGen(param_sampler= param_sampler, xs_sampler=xs_sampler)
 
 # test data
-test_param = {'amp':0.5, 'phase':1}
+test_param = None
 x_star = np.linspace(-3, 3, 100)
 y_star = data_generator.generate_data(x_star,test_param)
 
@@ -66,14 +65,16 @@ train_ys = []
 train_params = []
 
 for i in range(n_iter):
-    param = data_generator.param_sampler()
-    xs = data_generator.xs_sampler()
+    if data_generator.param_sampler is not None:
+        param = data_generator.param_sampler()
+        train_params.append(param)
 
+    xs = data_generator.xs_sampler()
     ys = data_generator.generate_data(xs, param)
 
     train_xs.append(xs)
     train_ys.append(ys)
-    train_params.append(param)
+
 
     n_context = random.choice(range(1, 11))
     feed_dict = split_context_target(xs.reshape(-1, 1), ys.reshape(-1, 1), n_context, x_context, y_context, x_target,
@@ -102,9 +103,9 @@ def plot_prediction(ax, xs, ys, x_star, y_star, plot_true = True, xlim = (-4.5, 
 
 fig, axes = plt.subplots(3, 1, figsize=(16,16))
 plot_true = False
-ylim=(-0.5, 0.5)
+ylim=(-2.5, 2.5)
 for ax, xs, ys in zip(axes, test_xss, test_yss):
     plot_prediction(ax, xs, ys, x_star, y_star, plot_true = plot_true, ylim = ylim, sess=sess)
     plot_true = True
-    ylim=(-1.5, 1.5)
+    ylim=(-2.5, 2.5)
 plt.show()

@@ -78,7 +78,7 @@ def get_z_params(context_r: tf.Tensor, params: NeuralProcessParams) -> GaussianP
     sigma = tf.layers.dense(context_r, params.dim_z, name="z_params_sigma", reuse=tf.AUTO_REUSE,
                             kernel_initializer='normal')
     sigma = tf.nn.softplus(sigma)
-    
+
     return GaussianParams(mu, sigma)
 
 

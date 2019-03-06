@@ -5,9 +5,15 @@ from .loss import loglikelihood, KLqp_gaussian
 from .network import xy_to_z_params, decoder_g
 
 
+class NeuralProcess:
+    def __init__(self, encoder_fn, decoder_fn):
+        self.encoder = encoder_fn
+        self.decoder = decoder_fn
+
+
 def init_neural_process(context_xs: tf.Tensor, context_ys: tf.Tensor,
                         target_xs: tf.Tensor, target_ys: tf.Tensor,
-                        params: NeuralProcessParams,encoder_h, decoder_g,
+                        params: NeuralProcessParams, encoder_h, decoder_g,
                         learning_rate=0.001, n_draws=7):
     """Set up complete, trainable neural process
 

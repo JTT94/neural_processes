@@ -1,4 +1,4 @@
-from NP_demo import *
+from Alan_NP_helpers import *
 
 def NP_algo(all_x_np, all_y_np, dim_struc, n_z_samples,n_epochs, n_display, return_loss, sub_vis, axes):
 
@@ -16,7 +16,7 @@ def NP_algo(all_x_np, all_y_np, dim_struc, n_z_samples,n_epochs, n_display, retu
                         +list(r_encoder.parameters()), 1e-3)
 
     # setup training
-    losses = []
+    # losses = []
     counter = 0
 
     for t in range(n_epochs):
@@ -47,7 +47,7 @@ def NP_algo(all_x_np, all_y_np, dim_struc, n_z_samples,n_epochs, n_display, retu
         loss = -1 * log_likelihood(mu, std, y_t) + KLD_gaussian(
             z_mean_all, z_std_all, z_mean_context, z_std_context)
 
-        losses.append(loss)
+        # losses.append(loss)
         loss.backward()
         opt.step()
 

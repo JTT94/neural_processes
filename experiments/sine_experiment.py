@@ -11,10 +11,10 @@ import tensorflow as tf
 # Initial params
 # ---------------------------------------------------
 # init nn architecture
-params = NeuralProcessParams(dim_r=2, dim_z=2, n_hidden_units_h=[8], n_hidden_units_g=[32, 32, 32])
+params = NeuralProcessParams(dim_r=2, dim_z=2, n_hidden_units_h=[8], n_hidden_units_g=[32, 32, 32], noise_std=0.05)
 
 # init sampling settings
-n_iter = 10000
+n_iter = 100000
 print_freq = n_iter/10
 n_obs = 20
 

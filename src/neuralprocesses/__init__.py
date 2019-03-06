@@ -5,7 +5,7 @@ from typing import Dict
 import numpy as np
 import tensorflow as tf
 
-NeuralProcessParams = namedtuple('NeuralProcessParams', ['dim_r', 'dim_z', 'n_hidden_units_h', 'n_hidden_units_g'])
+NeuralProcessParams = namedtuple('NeuralProcessParams', ['dim_r', 'dim_z', 'n_hidden_units_h', 'n_hidden_units_g', 'noise_std'])
 GaussianParams = namedtuple('GaussianParams', ['mu', 'sigma'])
 
 

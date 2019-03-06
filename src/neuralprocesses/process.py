@@ -5,15 +5,10 @@ from .loss import loglikelihood, KLqp_gaussian
 from .network import xy_to_z_params, decoder_g
 
 
-class NeuralProcess:
-    def __init__(self, encoder_fn, decoder_fn):
-        self.encoder = encoder_fn
-        self.decoder = decoder_fn
-
 
 def init_neural_process(context_xs: tf.Tensor, context_ys: tf.Tensor,
                         target_xs: tf.Tensor, target_ys: tf.Tensor,
-                        params: NeuralProcessParams, encoder_h, decoder_g,
+                        params: NeuralProcessParams,
                         learning_rate=0.001, n_draws=7):
     """Set up complete, trainable neural process
 
@@ -43,8 +38,8 @@ def init_neural_process(context_xs: tf.Tensor, context_ys: tf.Tensor,
     y_all = tf.concat([context_ys, target_ys], axis=0)
 
     # Map input to z
-    z_context = xy_to_z_params(context_xs, context_ys, params, encoder_h)
-    z_all = xy_to_z_params(x_all, y_all, params, encoder_h)
+    z_context = xy_to_z_params(context_xs, context_ys, params)
+    z_all = xy_to_z_params(x_all, y_all, params)
 
     # Sample z
     epsilon = tf.random_normal([n_draws, params.dim_z])

@@ -4,10 +4,10 @@ import numpy as np
 import tensorflow as tf
 
 from . import GaussianParams, NeuralProcessParams
-from .network import xy_to_z_params
+from .network import xy_to_z_params, decoder_g
 
 
-def prior_predict(input_xs_value: np.array, params: NeuralProcessParams, decoder_g,
+def prior_predict(input_xs_value: np.array, params: NeuralProcessParams,
                   epsilon: Optional[tf.Tensor] = None, n_draws: int = 1) -> GaussianParams:
     """Predict output with random network
 
@@ -43,7 +43,7 @@ def prior_predict(input_xs_value: np.array, params: NeuralProcessParams, decoder
 
 
 def posterior_predict(context_xs_value: np.array, context_ys_value: np.array, input_xs_value: np.array,
-                      params: NeuralProcessParams, encoder_h, decoder_g,
+                      params: NeuralProcessParams,
                       epsilon: Optional[tf.Tensor] = None, n_draws: int = 1) -> GaussianParams:
     """Predict posterior function value conditioned on context
 
@@ -73,7 +73,7 @@ def posterior_predict(context_xs_value: np.array, context_ys_value: np.array, in
     x_star = tf.constant(input_xs_value, dtype=tf.float32)
 
     # For out-of-sample new points
-    z_params = xy_to_z_params(xs, ys, params, encoder_h)
+    z_params = xy_to_z_params(xs, ys, params)
 
     # the source of randomness can be optionally passed as an argument
     if epsilon is None:

@@ -150,7 +150,7 @@ def decoder_g(z_samples: tf.Tensor, input_xs: tf.Tensor, params: NeuralProcessPa
 
 
 def xy_to_z_params(context_xs: tf.Tensor, context_ys: tf.Tensor,
-                   params: NeuralProcessParams, encoder_h) -> GaussianParams:
+                   params: NeuralProcessParams) -> GaussianParams:
     """Wrapper to create full network from context samples to parameters of pdf of Z
 
     Parameters

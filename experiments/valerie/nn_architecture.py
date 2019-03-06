@@ -1,3 +1,6 @@
+import tensorflow as tf
+from functions import *
+
 def encoder_h(xys, params):
     # initialize hidden layer
     hidden_layer = xys
@@ -9,7 +12,7 @@ def encoder_h(xys, params):
                                        , activation=tf.nn.relu
                                        , name='encoder_layer_{}'.format(i)
                                        , reuse=tf.AUTO_REUSE  # don't reuse weight and bias variables across layers
-                                       )
+                                       , kernel_initializer='normal')
 
     # create final layer that maps to rs
     i = len(params.n_hidden_units_h)
@@ -17,8 +20,9 @@ def encoder_h(xys, params):
                          , units=params.dim_r
                          , name='encoder_layer_{}'.format(i)
                          , reuse=tf.AUTO_REUSE
-                         )
+                         , kernel_initializer='normal')
     return rs
+
 
 
 def aggregate_r(rs):
@@ -27,17 +31,18 @@ def aggregate_r(rs):
     return r
 
 
-## specific to GP prior
 def get_z_params(r, params):
     mu = tf.layers.dense(r
                          , units=params.dim_z
                          , name='z_params_mu'
-                         , reuse=tf.AUTO_REUSE)
+                         , reuse=tf.AUTO_REUSE
+                         , kernel_initializer='normal')
 
     sigma = tf.layers.dense(r
                             , units=params.dim_z
                             , name='z_params_sigma'
-                            , reuse=tf.AUTO_REUSE)
+                            , reuse=tf.AUTO_REUSE
+                            , kernel_initializer='normal')
 
     sigma = tf.nn.softplus(sigma)
 
@@ -47,13 +52,14 @@ def get_z_params(r, params):
 def decoder_g(z_samples, x_target, params, noise_std):
     # generate y_pred_params using neural net with z_samples and x_target as inputs
 
-    # need to stack n_draws copies of x* together to concat with z  shape:  [n_draws, N_star, dim_x]
     n_draws = z_samples.get_shape().as_list()[0]  # n samples from z
     n_star = tf.shape(x_target)[0]  # n target xs
 
+    # need to stack n_draws copies of x* together to concat with z  shape:  [n_draws, n_star, dim_z]
     z_star = tf.expand_dims(z_samples, axis=1)
     z_star = tf.tile(z_star, [1, n_star, 1])
 
+    # need to stack n_draws copies of x* together to concat with z  shape:  [n_draws, n_star, dim_x]
     x_star = tf.expand_dims(x_target, axis=0)
     x_star = tf.tile(x_star, [n_draws, 1, 1])
 
@@ -67,7 +73,8 @@ def decoder_g(z_samples, x_target, params, noise_std):
                                        , units=units
                                        , activation=tf.nn.relu
                                        , name='decoder_layer{}'.format(i)
-                                       , reuse=tf.AUTO_REUSE)
+                                       , reuse=tf.AUTO_REUSE
+                                       , kernel_initializer='normal')
 
     # last layer is simple linear layer: shape (5, ?, 1)
     i = len(params.n_hidden_units_g)
@@ -75,7 +82,7 @@ def decoder_g(z_samples, x_target, params, noise_std):
                                    , units=1
                                    , name='decoder_layer{}'.format(i)
                                    , reuse=tf.AUTO_REUSE
-                                   )
+                                   , kernel_initializer='normal')
 
     # drop last dim of the layer and transpose to get shape [n_star, n_draws]
     mu_star = tf.squeeze(hidden_layer, axis=2)
@@ -83,6 +90,8 @@ def decoder_g(z_samples, x_target, params, noise_std):
 
     # constant noise - from a parameter
     sigma_star = tf.constant(noise_std, dtype=tf.float32)
+
+    #sigma_star = tf.
 
     return GaussianParams(mu_star, sigma_star)
 

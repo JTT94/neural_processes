@@ -1,12 +1,12 @@
 
+from nn_architecture import *
+import tensorflow as tf
+
 # define wrapper for whole process
 
-def NeuralProcess(x_context, y_context, x_target, y_target, learning_rate, params, n_draws, noise_std=0.05):
+def NeuralProcess(x_context, y_context, x_target, y_target, params, n_draws, noise_std=0.05):
     # params: dim_r, dim_z, n_hidden_units_h, n_hidden_layers_g
 
-    # reset and initialize new tensorflow session
-    tf.reset_default_graph()
-    sess = tf.Session()
 
     # create combined x and y vectors
     x_all = tf.concat([x_context, x_target], axis=0)
@@ -18,7 +18,7 @@ def NeuralProcess(x_context, y_context, x_target, y_target, learning_rate, param
 
     #### Step 2: sample Z
     # seed z_samples with draw from standard normal
-    epsilon = tf.random_normal(shape=[n_draws, params.z_dim])
+    epsilon = tf.random_normal(shape=[n_draws, params.dim_z])
     # scale noise using z_all.sigma
     z_samples = tf.multiply(epsilon, z_params_all.sigma)
     # re-center samples at z_all.mu
@@ -33,9 +33,29 @@ def NeuralProcess(x_context, y_context, x_target, y_target, learning_rate, param
     loss = tf.negative(loglik) + KLdist
 
     #### Step 5: Maximize ELBO, minimize loss
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    optimizer = tf.train.AdamOptimizer(learning_rate=params.learning_rate)
     train_opt = optimizer.minimize(loss)
 
     return train_opt, loss
 
 
+def initializeNP(params):
+    tf.reset_default_graph()
+    sess = tf.Session()
+
+    # Placeholders for training inputs
+    x_context = tf.placeholder(tf.float32, (None, 1))
+    y_context = tf.placeholder(tf.float32, (None, 1))
+    x_target = tf.placeholder(tf.float32, (None, 1))
+    y_target = tf.placeholder(tf.float32, (None, 1))
+
+    train_op, loss = NeuralProcess(x_context=x_context, y_context=y_context
+                                   , x_target=x_target, y_target=y_target
+                                   , params=params
+                                   , n_draws=7)
+
+    # Initialize
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    return sess

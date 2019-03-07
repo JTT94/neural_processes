@@ -32,8 +32,9 @@ class DeterministicEncoder(object):
       output_sizes: An iterable containing the output sizes of the encoding MLP.
     """
     self._output_sizes = output_sizes
+    self.forward = forward_fc
 
-  def __call__(self, context_x, context_y, num_context_points):
+  def __call__(self, context_x, context_y, num_context_points, weights=None):
     """Encodes the inputs into one representation.
 
     Args:
@@ -62,8 +63,13 @@ class DeterministicEncoder(object):
     dim_output = self._output_sizes[-1]
     # Pass through MLP
     with tf.variable_scope("encoder", reuse=tf.AUTO_REUSE):
-      self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
-      hidden = forward_fc(hidden, self.weights, dim_hidden, reuse=False)
+      if (weights is None) & ('weights' in dir(self)):
+        weights = self.weights
+      if 'weights' not in dir(self):
+        self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
+        weights = self.weights
+
+      hidden = forward_fc(hidden, weights, dim_hidden, reuse=False)
 
     size = self._output_sizes[-2]
     # Bring back into original shape
@@ -86,8 +92,10 @@ class DeterministicDecoder(object):
           as defined in `basic.Linear`.
     """
     self._output_sizes = output_sizes
+    self.forward = forward_fc
 
-  def __call__(self, representation, target_x, num_total_points):
+  def __call__(self, representation, target_x, num_total_points, weights = None):
+
     """Decodes the individual targets.
 
     Args:
@@ -117,8 +125,12 @@ class DeterministicDecoder(object):
 
     # Pass through MLP
     with tf.variable_scope("decoder", reuse=tf.AUTO_REUSE):
-      self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
-      hidden = forward_fc(hidden, self.weights, dim_hidden, reuse=False)
+      if (weights is None) & ('weights' in dir(self)):
+        weights = self.weights
+      if 'weights' not in dir(self):
+        self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
+        weights = self.weights
+      hidden = self.forward(hidden, weights, dim_hidden, reuse=False)
 
     # Bring back into original shape
     hidden = tf.reshape(hidden, (batch_size, num_total_points, -1))

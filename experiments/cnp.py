@@ -4,7 +4,7 @@ from src.conditional_neural_process.model import DeterministicModel
 
 # Config
 #------------------------------------------------------------
-TRAINING_ITERATIONS = int(2e5)
+TRAINING_ITERATIONS = int(100000)
 MAX_CONTEXT_POINTS = 10
 PLOT_AFTER = int(2e4)
 tf.reset_default_graph()
@@ -49,8 +49,15 @@ init = tf.initialize_all_variables()
 
 # Training loop
 #------------------------------------------------------------
-with tf.Session() as sess:
-  sess.run(init)
 
-  for it in range(TRAINING_ITERATIONS):
-    sess.run([train_step])
+sess = tf.Session()
+sess.run(init)
+for it in range(TRAINING_ITERATIONS):
+  sess.run([train_step])
+  if TRAINING_ITERATIONS % (TRAINING_ITERATIONS/10) == 0:
+    loss_value, pred_y, var, target_y, whole_query = sess.run(
+      [loss, mu, sigma, data_test.target_y, data_test.query])
+
+    (context_x, context_y), target_x = whole_query
+    print('Iteration: {}, loss: {}'.format(it, loss_value))
+

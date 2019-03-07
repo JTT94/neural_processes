@@ -33,17 +33,17 @@ train_op, loss = init_neural_process(x_context, y_context, x_target, y_target,
 init = tf.global_variables_initializer()
 sess.run(init)
 
-n_iter = 1000
+n_iter = 500000
 loss_freq = n_iter/10
 n_obs = 100
-q_low = 5
-q_high = 10
-p_low = -2
-p_high = 2
+q_low = 0.001
+q_high = 20
+p_low = -20
+p_high = 20
 x_range_low = -5
 x_range_high = 5
-q_pred = 3
-p_pred = 0
+q_pred = 10
+p_pred = 2
 
 #=========================================================
 # TRAINING
@@ -64,7 +64,7 @@ for i in range(n_iter):
     train_p.append(p)
     train_ys.append(ys)
 
-    n_context = random.choice(range(1, 99))
+    n_context = random.choice(range(50,70))
     feed_dict = split_context_target(xs.reshape(-1, 1), ys.reshape(-1, 1), n_context, x_context, y_context, x_target,
                                      y_target)
     a = sess.run((train_op, loss), feed_dict=feed_dict)
@@ -97,7 +97,7 @@ def plot_prediction(ax, xs, ys, x_star, y_star, plot_true = True, xlim = (-4.5, 
     ax.set_ylim(ylim)
 
 fig, axes = plt.subplots(3, 1, figsize=(5,5))
-xss = [np.array(xs) for xs in [[0], [-1, 1], [-2, -1, 0, 1, 2]]]
+xss = [np.array(xs) for xs in [[3], [1, 3], [-2, -1, 0, 1, 2]]]
 yss = [q_pred * (xs)**2 + p_pred for xs in xss]
 plot_true = False
 ylim=(-30, 30)

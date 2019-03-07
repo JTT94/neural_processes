@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .network import DeterministicEncoder, DeterministicDecoder
+from src.conditional_neural_process.network import DeterministicEncoder, DeterministicDecoder
 
 class DeterministicModel(object):
   """The CNP model."""

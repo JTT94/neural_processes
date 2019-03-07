@@ -74,62 +74,63 @@ class DeterministicEncoder(object):
 
     return representation
 
-  class DeterministicDecoder(object):
-    """The Decoder."""
 
-    def __init__(self, output_sizes):
-      """CNP decoder.
+class DeterministicDecoder(object):
+  """The Decoder."""
 
-      Args:
-        output_sizes: An iterable containing the output sizes of the decoder MLP
-            as defined in `basic.Linear`.
-      """
-      self._output_sizes = output_sizes
+  def __init__(self, output_sizes):
+    """CNP decoder.
 
-    def __call__(self, representation, target_x, num_total_points):
-      """Decodes the individual targets.
+    Args:
+      output_sizes: An iterable containing the output sizes of the decoder MLP
+          as defined in `basic.Linear`.
+    """
+    self._output_sizes = output_sizes
 
-      Args:
-        representation: The encoded representation of the context
-        target_x: The x locations for the target query
-        num_total_points: The number of target points.
+  def __call__(self, representation, target_x, num_total_points):
+    """Decodes the individual targets.
 
-      Returns:
-        dist: A multivariate Gaussian over the target points.
-        mu: The mean of the multivariate Gaussian.
-        sigma: The standard deviation of the multivariate Gaussian.
-      """
+    Args:
+      representation: The encoded representation of the context
+      target_x: The x locations for the target query
+      num_total_points: The number of target points.
 
-      # Concatenate the representation and the target_x
-      representation = tf.tile(
-        tf.expand_dims(representation, axis=1), [1, num_total_points, 1])
-      input = tf.concat([representation, target_x], axis=-1)
+    Returns:
+      dist: A multivariate Gaussian over the target points.
+      mu: The mean of the multivariate Gaussian.
+      sigma: The standard deviation of the multivariate Gaussian.
+    """
 
-      # Get the shapes of the input and reshape to parallelise across observations
-      batch_size, _, filter_size = input.shape.as_list()
-      hidden = tf.reshape(input, (batch_size * num_total_points, -1))
-      hidden.set_shape((None, filter_size))
+    # Concatenate the representation and the target_x
+    representation = tf.tile(
+      tf.expand_dims(representation, axis=1), [1, num_total_points, 1])
+    input = tf.concat([representation, target_x], axis=-1)
 
-      dim_input = filter_size
-      dim_hidden = self._output_sizes[:-1]
-      dim_output = self._output_sizes[-1]
+    # Get the shapes of the input and reshape to parallelise across observations
+    batch_size, _, filter_size = input.shape.as_list()
+    hidden = tf.reshape(input, (batch_size * num_total_points, -1))
+    hidden.set_shape((None, filter_size))
 
-      # Pass through MLP
-      with tf.variable_scope("decoder", reuse=tf.AUTO_REUSE):
-        self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
-        hidden = forward_fc(hidden, self.weights, dim_hidden, reuse=False)
+    dim_input = filter_size
+    dim_hidden = self._output_sizes[:-1]
+    dim_output = self._output_sizes[-1]
 
-      # Bring back into original shape
-      hidden = tf.reshape(hidden, (batch_size, num_total_points, -1))
+    # Pass through MLP
+    with tf.variable_scope("decoder", reuse=tf.AUTO_REUSE):
+      self.weights = construct_fc_weights(dim_input, dim_hidden, dim_output)
+      hidden = forward_fc(hidden, self.weights, dim_hidden, reuse=False)
 
-      # Get the mean an the variance
-      mu, log_sigma = tf.split(hidden, 2, axis=-1)
+    # Bring back into original shape
+    hidden = tf.reshape(hidden, (batch_size, num_total_points, -1))
 
-      # Bound the variance
-      sigma = 0.1 + 0.9 * tf.nn.softplus(log_sigma)
+    # Get the mean an the variance
+    mu, log_sigma = tf.split(hidden, 2, axis=-1)
 
-      # Get the distribution
-      dist = tf.contrib.distributions.MultivariateNormalDiag(
-        loc=mu, scale_diag=sigma)
+    # Bound the variance
+    sigma = 0.1 + 0.9 * tf.nn.softplus(log_sigma)
 
-      return dist, mu, sigma
+    # Get the distribution
+    dist = tf.contrib.distributions.MultivariateNormalDiag(
+      loc=mu, scale_diag=sigma)
+
+    return dist, mu, sigma
